@@ -1,6 +1,6 @@
 # Blog REST API
 
-A simple, production-ready REST API for managing blog posts and comments built with Go and MongoDB.
+A simple, production-ready REST API for managing blog posts and comments built with **Go Fiber v2** and **MongoDB**.
 
 ## Features
 
@@ -9,13 +9,48 @@ A simple, production-ready REST API for managing blog posts and comments built w
 - **Docker** containerization with Docker Compose
 - **Clean JSON API** responses with consistent error handling
 - **Input validation** and proper HTTP status codes
-- **Production-ready** with timeouts and error handling
+- **Production-ready** with timeouts and graceful shutdown
+- **Fiber v2** - Fast, Express-inspired web framework
+
+## Tech Stack
+
+- **Go 1.24** with Fiber v2 framework
+- **MongoDB 7.0** for data storage
+- **Docker & Docker Compose** for containerization
+- **Alpine Linux** for minimal container size
+
+## Project Structure
+
+```
+blog-api/
+├── app/
+│   └── cmd/
+│       └── main.go          # Application entry point
+├── internal/
+│   ├── config/
+│   │   └── config.go        # Configuration management
+│   ├── models/
+│   │   └── models.go        # Data models
+│   ├── handlers/
+│   │   └── handlers.go      # HTTP handlers
+│   ├── storage/
+│   │   └── storage.go       # Database connection
+│   └── routes/
+│       └── routes.go        # Route setup
+├── docker-compose.yml
+├── Dockerfile
+├── go.mod
+├── go.sum
+├── .env
+├── .env.example
+└── README.md
+```
 
 ## Data Models
 
 ### BlogPost
 
-- `id` - Unique identifier
+- `id` - Unique identifier (MongoDB ObjectID)
 - `title` - Post title
 - `content` - Post content
 - `created` - Creation timestamp
@@ -23,7 +58,7 @@ A simple, production-ready REST API for managing blog posts and comments built w
 
 ### Comment
 
-- `id` - Unique identifier
+- `id` - Unique identifier (MongoDB ObjectID)
 - `post_id` - Reference to blog post
 - `author` - Comment author name
 - `content` - Comment content
@@ -31,31 +66,34 @@ A simple, production-ready REST API for managing blog posts and comments built w
 
 ## API Endpoints
 
-| Method | Endpoint                   | Description                            |
-| ------ | -------------------------- | -------------------------------------- |
-| GET    | `/api/posts`               | Get all blog posts with comment counts |
-| POST   | `/api/posts`               | Create a new blog post                 |
-| GET    | `/api/posts/{id}`          | Get specific blog post with comments   |
-| POST   | `/api/posts/{id}/comments` | Add comment to a blog post             |
+| Method | Endpoint                  | Description                            |
+| ------ | ------------------------- | -------------------------------------- |
+| GET    | `/api/posts`              | Get all blog posts with comment counts |
+| POST   | `/api/posts`              | Create a new blog post                 |
+| GET    | `/api/posts/:id`          | Get specific blog post with comments   |
+| POST   | `/api/posts/:id/comments` | Add comment to a blog post             |
 
 ## Quick Start
 
 ### Prerequisites
 
 - Docker and Docker Compose
-- Or Go 1.21+ and MongoDB (for local development)
+- Or Go 1.24+ and MongoDB (for local development)
 
-### Run with Docker
+### Run with Docker (Recommended)
 
 ```bash
 # Clone the repository
 git clone <repository-url>
 cd blog-api
 
+# Create environment file
+cp .env.example .env
+
 # Start the application
 docker-compose up -d
 
-# API will be available at http://localhost:8080
+# API will be available at http://localhost:3030
 ```
 
 ### Local Development
@@ -64,11 +102,29 @@ docker-compose up -d
 # Install dependencies
 go mod download
 
-# Set MongoDB connection (optional)
-export MONGODB_URI="mongodb://localhost:27017/blog"
+# Set environment variables
+export MONGODB_URI="mongodb://localhost:27017"
+export DB_NAME="blog"
+export PORT="3030"
 
 # Run the application
-go run main.go
+go run app/cmd/main.go
+```
+
+## Environment Variables
+
+Create a `.env` file in the project root:
+
+```bash
+# Database Configuration
+MONGODB_URI=mongodb://mongodb:27017
+DB_NAME=blog
+
+# Server Configuration
+PORT=3030
+
+# Environment
+ENV=production
 ```
 
 ## API Usage Examples
@@ -76,7 +132,7 @@ go run main.go
 ### Create a Blog Post
 
 ```bash
-curl -X POST http://localhost:8080/api/posts \
+curl -X POST http://localhost:3030/api/posts \
   -H "Content-Type: application/json" \
   -d '{
     "title": "My First Blog Post",
@@ -101,7 +157,7 @@ curl -X POST http://localhost:8080/api/posts \
 ### Get All Blog Posts
 
 ```bash
-curl http://localhost:8080/api/posts
+curl http://localhost:3030/api/posts
 ```
 
 **Response:**
@@ -123,7 +179,7 @@ curl http://localhost:8080/api/posts
 ### Get Specific Blog Post
 
 ```bash
-curl http://localhost:8080/api/posts/65f1a2b3c4d5e6f7g8h9i0j1
+curl http://localhost:3030/api/posts/65f1a2b3c4d5e6f7g8h9i0j1
 ```
 
 **Response:**
@@ -152,7 +208,7 @@ curl http://localhost:8080/api/posts/65f1a2b3c4d5e6f7g8h9i0j1
 ### Add Comment to Blog Post
 
 ```bash
-curl -X POST http://localhost:8080/api/posts/65f1a2b3c4d5e6f7g8h9i0j1/comments \
+curl -X POST http://localhost:3030/api/posts/65f1a2b3c4d5e6f7g8h9i0j1/comments \
   -H "Content-Type: application/json" \
   -d '{
     "author": "Jane Smith",
@@ -175,16 +231,20 @@ curl -X POST http://localhost:8080/api/posts/65f1a2b3c4d5e6f7g8h9i0j1/comments \
 }
 ```
 
-## Environment Variables
+## API Response Format
 
-| Variable      | Default                          | Description               |
-| ------------- | -------------------------------- | ------------------------- |
-| `MONGODB_URI` | `mongodb://localhost:27017/blog` | MongoDB connection string |
-| `PORT`        | `8080`                           | Server port               |
+All API responses follow this consistent structure:
 
-## Error Responses
+### Success Response:
 
-All error responses follow this format:
+```json
+{
+  "success": true,
+  "data": { ... }
+}
+```
+
+### Error Response:
 
 ```json
 {
@@ -193,41 +253,65 @@ All error responses follow this format:
 }
 ```
 
+## Error Responses
+
 Common HTTP status codes:
 
 - `400` - Bad Request (invalid JSON, missing required fields)
 - `404` - Not Found (post not found)
 - `500` - Internal Server Error (database errors)
 
-## Project Structure
+## Docker Commands
 
+```bash
+# Start services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f blog-api
+
+# Stop services
+docker-compose down
+
+# Rebuild after code changes
+docker-compose up --build
+
+# Remove volumes (reset database)
+docker-compose down -v
 ```
-.
-├── app
-├──────cmd
-├───────── main.go              # Main application file
-├── go.mod              # Go module dependencies
-├── go.sum              # Go module checksums
-├── Dockerfile          # Docker configuration
-├── docker-compose.yml  # Docker Compose setup
-└── README.md           # This file
-```
+
+## Development
+
+### Project Structure Benefits
+
+- **Clean Architecture** - Separation of concerns
+- **Testable** - Easy to unit test individual components
+- **Maintainable** - Clear organization
+- **Scalable** - Easy to add new features
+- **Standard** - Follows Go project layout conventions
+
+### Adding New Features
+
+1. Add new models in `internal/models/`
+2. Create handlers in `internal/handlers/`
+3. Register routes in `internal/routes/`
+4. Update documentation
 
 ## Production Considerations
 
-- **Database Indexing**: Add indexes on frequently queried fields
-- **Authentication**: Implement JWT or similar auth mechanism
-- **Rate Limiting**: Add rate limiting middleware
-- **Logging**: Implement structured logging
-- **Monitoring**: Add health checks and metrics
-- **Validation**: Enhanced input validation and sanitization
-- **CORS**: Configure CORS for frontend integration
+- **Database Indexing** - Add indexes on frequently queried fields
+- **Authentication** - Implement JWT or similar auth mechanism
+- **Rate Limiting** - Add rate limiting middleware
+- **Logging** - Implement structured logging with logrus or zap
+- **Monitoring** - Add health checks and metrics
+- **Validation** - Enhanced input validation and sanitization
+- **CORS** - Configure CORS for frontend integration
+- **SSL/TLS** - Enable HTTPS in production
+- **Load Balancing** - Use reverse proxy (nginx) for multiple instances
 
 ## Dependencies
 
-- [Fiber/v2](https://docs.gofiber.io/api/fiber) - HTTP router
+- [Fiber v2](https://github.com/gofiber/fiber) - HTTP web framework
 - [MongoDB Go Driver](https://go.mongodb.org/mongo-driver) - MongoDB client
-
-## License
-
-MIT License
+- [Docker](https://www.docker.com/) - Containerization
+- [Docker Compose](https://docs.docker.com/compose/) - Multi-container orchestration
