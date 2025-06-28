@@ -16,9 +16,9 @@ func registerRoutes(app *fiber.App, h *handlers.Handler) fiber.Router {
 	router := app.Group("/api")
 
 	app.Get("/api/posts", h.GetPosts)
-	app.Get("/api/posts/{id}", h.GetPost)
+	app.Get("/api/posts/:id", h.GetPost)
 	app.Post("/api/posts", h.CreatePost)
-	app.Post("/api/posts/{id}/comments", h.CreateComment)
+	app.Post("/api/posts/:id/comments", h.CreateComment)
 
 	return router
 }
