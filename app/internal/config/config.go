@@ -16,6 +16,7 @@ type Config struct {
 	Port     string // Server port number (e.g., "3030", "8080")
 	MongoURI string // MongoDB connection URI (e.g., "mongodb://localhost:27017")
 	DBName   string // MongoDB database name to use
+	ENV      string // DEV, PROD ...
 }
 
 // Load reads configuration from environment variables and .env file.
@@ -25,8 +26,7 @@ type Config struct {
 func Load() *Config {
 	// Try to load .env file - this will fail silently in production
 	// environments where .env files might not exist
-	err := godotenv.Load()
-	if err != nil {
+	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
@@ -34,7 +34,8 @@ func Load() *Config {
 	return &Config{
 		Port:     getEnv("PORT", "3030"),                           // Default to port 3030
 		MongoURI: getEnv("MONGODB_URI", "mongodb://mongodb:27017"), // Default to Docker MongoDB service
-		DBName:   getEnv("MONGODB_NAME", "blog"),                   // Default database name
+		DBName:   getEnv("MONGODB_NAME", "blog"),
+		ENV:      getEnv("ENV", "PROD"), // Default database name
 	}
 }
 

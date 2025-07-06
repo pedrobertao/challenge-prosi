@@ -16,14 +16,14 @@ import (
 //   - h: pointer to a Handler instance containing all endpoint handlers
 //
 // Returns a configured Fiber application ready to serve HTTP requests.
-func Setup(h *handlers.Handler) *fiber.App {
+func Setup(handlers *handlers.Handler) *fiber.App {
 	// Create a new Fiber application instance with default configuration
-	app := fiber.New()
+	fiberApp := fiber.New()
 
 	// Register all API routes with their corresponding handlers
-	registerRoutes(app, h)
+	registerRoutes(fiberApp, handlers)
 
-	return app
+	return fiberApp
 }
 
 // registerRoutes configures all API endpoints for the blog application.
@@ -46,12 +46,14 @@ func registerRoutes(app *fiber.App, h *handlers.Handler) fiber.Router {
 	router := app.Group("/api")
 
 	// Blog posts endpoints
-	app.Get("/api/posts", h.GetPosts)    // List all posts with summaries
-	app.Get("/api/posts/:id", h.GetPost) // Get single post with comments
-	app.Post("/api/posts", h.CreatePost) // Create new blog post
+	app.Get("/api/posts", h.GetPosts)          // List all posts with summaries
+	app.Get("/api/posts/:id", h.GetPost)       // Get single post with comments
+	app.Post("/api/posts", h.CreatePost)       // Create new blog post
+	app.Delete("/api/posts/:id", h.DeletePost) // Create new blog post
 
 	// Comments endpoint
 	app.Post("/api/posts/:id/comments", h.CreateComment) // Add comment to post
+	app.Delete("/api/comments/:id", h.DeleteComment)     // Create new blog post
 
 	return router
 }
