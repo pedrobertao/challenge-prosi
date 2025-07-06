@@ -43,17 +43,17 @@ func Setup(handlers *handlers.Handler) *fiber.App {
 // Returns the API router group for potential additional configuration.
 func registerRoutes(app *fiber.App, h *handlers.Handler) fiber.Router {
 	// Create API route group for all endpoints under /api prefix
-	router := app.Group("/api")
+	apiGroup := app.Group("/api")
 
 	// Blog posts endpoints
-	app.Get("/api/posts", h.GetPosts)          // List all posts with summaries
-	app.Get("/api/posts/:id", h.GetPost)       // Get single post with comments
-	app.Post("/api/posts", h.CreatePost)       // Create new blog post
-	app.Delete("/api/posts/:id", h.DeletePost) // Create new blog post
+	apiGroup.Get("/posts", h.GetPosts)          // List all posts with summaries
+	apiGroup.Get("/posts/:id", h.GetPost)       // Get single post with comments
+	apiGroup.Post("/posts", h.CreatePost)       // Create new blog post
+	apiGroup.Delete("/posts/:id", h.DeletePost) // Create new blog post
 
 	// Comments endpoint
-	app.Post("/api/posts/:id/comments", h.CreateComment) // Add comment to post
-	app.Delete("/api/comments/:id", h.DeleteComment)     // Create new blog post
+	apiGroup.Post("/posts/:id/comments", h.CreateComment) // Add comment to post
+	apiGroup.Delete("/comments/:id", h.DeleteComment)     // Create new blog post
 
-	return router
+	return apiGroup
 }
