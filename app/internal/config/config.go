@@ -32,8 +32,8 @@ func Load() *Config {
 
 	// Create and return config with environment variables or defaults
 	return &Config{
-		Port:     getEnv("PORT", "3030"),                           // Default to port 3030
-		MongoURI: getEnv("MONGODB_URI", "mongodb://mongodb:27017"), // Default to Docker MongoDB service
+		Port:     getEnv("PORT", "8080"),                             // Default to port 3030
+		MongoURI: getEnv("MONGODB_URI", "mongodb://127.0.0.1:27017"), // Default to Docker MongoDB service
 		DBName:   getEnv("MONGODB_NAME", "blog"),
 		ENV:      getEnv("ENV", "PROD"), // Default database name
 	}
