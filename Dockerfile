@@ -15,11 +15,10 @@ RUN go mod download
 # Copy entire project
 COPY . .
 
-# Set to directory where your main.go lives
-WORKDIR /app/cmd
-
 # Build the Go binary (statically linked for Alpine)
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o server main.go
+# Change to cmd directory and build from there
+WORKDIR /app/cmd
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o server .
 
 # -------- RUNTIME STAGE --------
 FROM alpine:latest
