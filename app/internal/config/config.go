@@ -16,7 +16,7 @@ type Config struct {
 	Port     string // Server port number (e.g., "3030", "8080")
 	MongoURI string // MongoDB connection URI (e.g., "mongodb://localhost:27017")
 	DBName   string // MongoDB database name to use
-	ENV      string // DEV, PROD ...
+	ENV      string // dev, prod ...
 }
 
 // Load reads configuration from environment variables and .env file.
