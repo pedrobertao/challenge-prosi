@@ -27,7 +27,7 @@ func Load() *Config {
 	// Try to load .env file - this will fail silently in production
 	// environments where .env files might not exist
 	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
+		log.Println("Error loading .env file")
 	}
 
 	// Create and return config with environment variables or defaults
