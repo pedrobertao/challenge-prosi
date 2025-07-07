@@ -1,24 +1,20 @@
 # -------- BUILD STAGE --------
 FROM golang:1.23-alpine AS builder
 
-# Install git and CA certificates
+# Install dependencies for HTTPS, Git
 RUN apk add --no-cache git ca-certificates
 
-WORKDIR /app
+# Set root of your project
+WORKDIR /build
 
-# Copy go mod files first for better caching
-COPY go.mod go.sum ./
-
-# Download dependencies
-RUN go mod download
-
-# Copy entire project
+# Copy everything (go.mod must be at root)
 COPY . .
 
-# Build the Go binary (statically linked for Alpine)
-# Change to cmd directory and build from there
-WORKDIR /app/cmd
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o server .
+# Download Go modules
+RUN go mod download
+
+# Build from full path to main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o server ./app/cmd/main.go
 
 # -------- RUNTIME STAGE --------
 FROM alpine:latest
@@ -28,13 +24,11 @@ RUN apk add --no-cache ca-certificates
 
 WORKDIR /root/
 
-# Copy built binary from builder
-COPY --from=builder /app/cmd/server .
+# Copy binary from build stage
+COPY --from=builder /build/server .
 
-# Make binary executable
-RUN chmod +x ./server
-
-# Set binary as entrypoint
-CMD ["./server"]
-
+# Expose port for Cloud Run
 EXPOSE 8080
+
+# Run the binary
+CMD ["./server"]
