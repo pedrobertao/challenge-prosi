@@ -1,317 +1,462 @@
-# Blog REST API
+# Blog API Request Documentation
 
-A simple, production-ready REST API for managing blog posts and comments built with **Go Fiber v2** and **MongoDB**.
+This document outlines all the HTTP requests supported by the blog API, including endpoints, request formats, and expected responses.
 
-## Features
-
-- **CRUD Operations** for blog posts and comments
-- **MongoDB** integration with proper connection handling
-- **Docker** containerization with Docker Compose
-- **Clean JSON API** responses with consistent error handling
-- **Input validation** and proper HTTP status codes
-- **Production-ready** with timeouts and graceful shutdown
-- **Fiber v2** - Fast, Express-inspired web framework
-
-## Tech Stack
-
-- **Go 1.24** with Fiber v2 framework
-- **MongoDB 7.0** for data storage
-- **Docker & Docker Compose** for containerization
-- **Alpine Linux** for minimal container size
-
-## Project Structure
+## Base URL
 
 ```
-blog-api/
-├── app/
-│   └── cmd/
-│       └── main.go          # Application entry point
-├── internal/
-│   ├── config/
-│   │   └── config.go        # Configuration management
-│   ├── models/
-│   │   └── models.go        # Data models
-│   ├── handlers/
-│   │   └── handlers.go      # HTTP handlers
-│   ├── storage/
-│   │   └── storage.go       # Database connection
-│   └── routes/
-│       └── routes.go        # Route setup
-├── docker-compose.yml
-├── Dockerfile
-├── go.mod
-├── go.sum
-├── .env
-├── .env.example
-└── README.md
+https://challenge-prosi-390352505094.southamerica-east1.run.app/api
 ```
 
-## Data Models
+## Authentication
 
-### BlogPost
+No authentication required for any endpoints.
 
-- `id` - Unique identifier (MongoDB ObjectID)
-- `title` - Post title
-- `content` - Post content
-- `created` - Creation timestamp
-- `comments` - Associated comments (when retrieving single post)
+---
 
-### Comment
+## Posts Endpoints
 
-- `id` - Unique identifier (MongoDB ObjectID)
-- `post_id` - Reference to blog post
-- `author` - Comment author name
-- `content` - Comment content
-- `created` - Creation timestamp
+### 1. Get All Posts
 
-## API Endpoints
+**Endpoint:** `GET /api/posts`
 
-| Method | Endpoint                  | Description                            |
-| ------ | ------------------------- | -------------------------------------- |
-| GET    | `/api/posts`              | Get all blog posts with comment counts |
-| POST   | `/api/posts`              | Create a new blog post                 |
-| GET    | `/api/posts/:id`          | Get specific blog post with comments   |
-| POST   | `/api/posts/:id/comments` | Add comment to a blog post             |
+**Description:** Retrieves a list of all blog posts with summary information including post ID, title, comment count, and creation date.
 
-## Quick Start
+**Request:**
 
-### Prerequisites
-
-- Docker and Docker Compose
-- Or Go 1.24+ and MongoDB (for local development)
-
-### Run with Docker (Recommended)
-
-```bash
-# Clone the repository
-git clone <repository-url>
-cd blog-api
-
-# Create environment file
-cp .env.example .env
-
-# Start the application
-docker-compose up -d
-
-# API will be available at http://localhost:3030
+```http
+GET /api/posts
+Content-Type: application/json
 ```
 
-### Local Development
+**Response Examples:**
 
-```bash
-# Install dependencies
-go mod download
-
-# Set environment variables
-export MONGODB_URI="mongodb://localhost:27017"
-export DB_NAME="blog"
-export PORT="3030"
-
-# Run the application
-go run app/cmd/main.go
-```
-
-## Environment Variables
-
-Create a `.env` file in the project root:
-
-```bash
-# Database Configuration
-MONGODB_URI=mongodb://mongodb:27017
-DB_NAME=blog
-
-# Server Configuration
-PORT=3030
-
-# Environment
-ENV=production
-```
-
-## API Usage Examples
-
-### Create a Blog Post
-
-```bash
-curl -X POST http://localhost:3030/api/posts \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "My First Blog Post",
-    "content": "This is the content of my first blog post."
-  }'
-```
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "data": {
-    "id": "65f1a2b3c4d5e6f7g8h9i0j1",
-    "title": "My First Blog Post",
-    "content": "This is the content of my first blog post.",
-    "created": "2024-03-15T10:30:00Z"
-  }
-}
-```
-
-### Get All Blog Posts
-
-```bash
-curl http://localhost:3030/api/posts
-```
-
-**Response:**
+**Success (200):**
 
 ```json
 {
   "success": true,
   "data": [
     {
-      "id": "65f1a2b3c4d5e6f7g8h9i0j1",
+      "id": "507f1f77bcf86cd799439011",
       "title": "My First Blog Post",
+      "comment_count": 5,
+      "created_at": "2024-01-15T10:30:00Z"
+    },
+    {
+      "id": "507f1f77bcf86cd799439012",
+      "title": "Another Great Post",
       "comment_count": 2,
-      "created": "2024-03-15T10:30:00Z"
+      "created_at": "2024-01-16T14:22:00Z"
     }
-  ]
+  ],
+  "error": ""
 }
 ```
 
-### Get Specific Blog Post
-
-```bash
-curl http://localhost:3030/api/posts/65f1a2b3c4d5e6f7g8h9i0j1
-```
-
-**Response:**
+**No Posts Found (404):**
 
 ```json
 {
   "success": true,
-  "data": {
-    "id": "65f1a2b3c4d5e6f7g8h9i0j1",
-    "title": "My First Blog Post",
-    "content": "This is the content of my first blog post.",
-    "comments": [
-      {
-        "id": "65f1a2b3c4d5e6f7g8h9i0j2",
-        "post_id": "65f1a2b3c4d5e6f7g8h9i0j1",
-        "author": "John Doe",
-        "content": "Great post!",
-        "created": "2024-03-15T11:00:00Z"
-      }
-    ],
-    "created": "2024-03-15T10:30:00Z"
-  }
+  "data": [],
+  "error": ""
 }
 ```
 
-### Add Comment to Blog Post
-
-```bash
-curl -X POST http://localhost:3030/api/posts/65f1a2b3c4d5e6f7g8h9i0j1/comments \
-  -H "Content-Type: application/json" \
-  -d '{
-    "author": "Jane Smith",
-    "content": "Thanks for sharing this!"
-  }'
-```
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "data": {
-    "id": "65f1a2b3c4d5e6f7g8h9i0j3",
-    "post_id": "65f1a2b3c4d5e6f7g8h9i0j1",
-    "author": "Jane Smith",
-    "content": "Thanks for sharing this!",
-    "created": "2024-03-15T11:15:00Z"
-  }
-}
-```
-
-## API Response Format
-
-All API responses follow this consistent structure:
-
-### Success Response:
-
-```json
-{
-  "success": true,
-  "data": { ... }
-}
-```
-
-### Error Response:
+**Database Error (502):**
 
 ```json
 {
   "success": false,
-  "error": "Error message description"
+  "error": "Failed to fetch posts"
 }
 ```
 
-## Error Responses
+---
 
-Common HTTP status codes:
+### 2. Create New Post
 
-- `400` - Bad Request (invalid JSON, missing required fields)
-- `404` - Not Found (post not found)
-- `500` - Internal Server Error (database errors)
+**Endpoint:** `POST /api/posts`
 
-## Docker Commands
+**Description:** Creates a new blog post with the provided title and content.
 
-```bash
-# Start services
-docker-compose up -d
+**Request:**
 
-# View logs
-docker-compose logs -f blog-api
+```http
+POST /api/posts
+Content-Type: application/json
 
-# Stop services
-docker-compose down
-
-# Rebuild after code changes
-docker-compose up --build
-
-# Remove volumes (reset database)
-docker-compose down -v
+{
+  "title": "My New Blog Post",
+  "content": "This is the content of my new blog post. It can be quite long and contain multiple paragraphs."
+}
 ```
 
-## Development
+**Response Examples:**
 
-### Project Structure Benefits
+**Success (200):**
 
-- **Clean Architecture** - Separation of concerns
-- **Testable** - Easy to unit test individual components
-- **Maintainable** - Clear organization
-- **Scalable** - Easy to add new features
-- **Standard** - Follows Go project layout conventions
+```json
+{
+  "success": true,
+  "data": {
+    "id": "507f1f77bcf86cd799439013",
+    "title": "My New Blog Post",
+    "content": "This is the content of my new blog post. It can be quite long and contain multiple paragraphs.",
+    "created_at": "2024-01-17T09:15:00Z",
+    "comments": []
+  },
+  "error": ""
+}
+```
 
-### Adding New Features
+**Invalid JSON (400):**
 
-1. Add new models in `internal/models/`
-2. Create handlers in `internal/handlers/`
-3. Register routes in `internal/routes/`
-4. Update documentation
+```json
+{
+  "success": false,
+  "error": "Invalid JSON"
+}
+```
 
-## Production Considerations
+**Missing Required Fields (400):**
 
-- **Database Indexing** - Add indexes on frequently queried fields
-- **Authentication** - Implement JWT or similar auth mechanism
-- **Rate Limiting** - Add rate limiting middleware
-- **Logging** - Implement structured logging with logrus or zap
-- **Monitoring** - Add health checks and metrics
-- **Validation** - Enhanced input validation and sanitization
-- **CORS** - Configure CORS for frontend integration
-- **SSL/TLS** - Enable HTTPS in production
-- **Load Balancing** - Use reverse proxy (nginx) for multiple instances
+```json
+{
+  "success": false,
+  "error": "Title and content required"
+}
+```
 
-## Dependencies
+**Database Error (502):**
 
-- [Fiber v2](https://github.com/gofiber/fiber) - HTTP web framework
-- [MongoDB Go Driver](https://go.mongodb.org/mongo-driver) - MongoDB client
-- [Docker](https://www.docker.com/) - Containerization
-- [Docker Compose](https://docs.docker.com/compose/) - Multi-container orchestration
+```json
+{
+  "success": false,
+  "error": "Failed to create post"
+}
+```
+
+---
+
+### 3. Get Single Post
+
+**Endpoint:** `GET /api/posts/:id`
+
+**Description:** Retrieves a specific blog post by its ID along with all associated comments.
+
+**Request:**
+
+```http
+GET /api/posts/507f1f77bcf86cd799439011
+Content-Type: application/json
+```
+
+**Response Examples:**
+
+**Success (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "507f1f77bcf86cd799439011",
+    "title": "My First Blog Post",
+    "content": "This is the full content of my first blog post with all the details.",
+    "created_at": "2024-01-15T10:30:00Z",
+    "comments": [
+      {
+        "id": "507f1f77bcf86cd799439021",
+        "post_id": "507f1f77bcf86cd799439011",
+        "author": "John Doe",
+        "content": "Great post! Thanks for sharing.",
+        "created_at": "2024-01-15T12:45:00Z"
+      },
+      {
+        "id": "507f1f77bcf86cd799439022",
+        "post_id": "507f1f77bcf86cd799439011",
+        "author": "Jane Smith",
+        "content": "I found this very helpful.",
+        "created_at": "2024-01-15T14:20:00Z"
+      }
+    ]
+  },
+  "error": ""
+}
+```
+
+**Invalid Post ID (400):**
+
+```json
+{
+  "success": false,
+  "error": "Invalid post ID"
+}
+```
+
+**Post Not Found (404):**
+
+```json
+{
+  "success": false,
+  "error": "Post not found"
+}
+```
+
+**Database Error (500):**
+
+```json
+{
+  "success": false,
+  "error": "Failed to fetch post"
+}
+```
+
+---
+
+### 4. Delete Post
+
+**Endpoint:** `DELETE /api/posts/:id`
+
+**Description:** Deletes a specific blog post and all its associated comments atomically using MongoDB transactions.
+
+**Request:**
+
+```http
+DELETE /api/posts/507f1f77bcf86cd799439011
+Content-Type: application/json
+```
+
+**Response Examples:**
+
+**Success (200):**
+
+```json
+{
+  "success": true,
+  "data": "507f1f77bcf86cd799439011",
+  "error": ""
+}
+```
+
+**Invalid Post ID (400):**
+
+```json
+{
+  "success": false,
+  "error": "Invalid post ID"
+}
+```
+
+**Post Not Found (400):**
+
+```json
+{
+  "success": false,
+  "error": "Post not found"
+}
+```
+
+**Database Error (502):**
+
+```json
+{
+  "success": false,
+  "error": "Failed to delete post"
+}
+```
+
+---
+
+## Comments Endpoints
+
+### 5. Create Comment
+
+**Endpoint:** `POST /api/posts/:id/comments`
+
+**Description:** Creates a new comment on a specific blog post.
+
+**Request:**
+
+```http
+POST /api/posts/507f1f77bcf86cd799439011/comments
+Content-Type: application/json
+
+{
+  "author": "John Doe",
+  "content": "This is a great blog post! Thanks for sharing your insights."
+}
+```
+
+**Response Examples:**
+
+**Success (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "507f1f77bcf86cd799439023",
+    "post_id": "507f1f77bcf86cd799439011",
+    "author": "John Doe",
+    "content": "This is a great blog post! Thanks for sharing your insights.",
+    "created_at": "2024-01-17T11:30:00Z"
+  },
+  "error": ""
+}
+```
+
+**Invalid Post ID (400):**
+
+```json
+{
+  "success": false,
+  "error": "Invalid post ID"
+}
+```
+
+**Invalid JSON (400):**
+
+```json
+{
+  "success": false,
+  "error": "Invalid JSON"
+}
+```
+
+**Missing Required Fields (400):**
+
+```json
+{
+  "success": false,
+  "error": "Author and content required"
+}
+```
+
+**Post Not Found (404):**
+
+```json
+{
+  "success": false,
+  "error": "Post not found"
+}
+```
+
+**Database Error (500):**
+
+```json
+{
+  "success": false,
+  "error": "Failed to create comment"
+}
+```
+
+---
+
+### 6. Delete Comment
+
+**Endpoint:** `DELETE /api/comments/:id`
+
+**Description:** Deletes a specific comment by its ID.
+
+**Request:**
+
+```http
+DELETE /api/comments/507f1f77bcf86cd799439023
+Content-Type: application/json
+```
+
+**Response Examples:**
+
+**Success (200):**
+
+```json
+{
+  "success": true,
+  "data": "507f1f77bcf86cd799439023",
+  "error": ""
+}
+```
+
+**Invalid Comment ID (400):**
+
+```json
+{
+  "success": false,
+  "error": "Invalid comment ID"
+}
+```
+
+**Comment Not Found (400):**
+
+```json
+{
+  "success": false,
+  "error": "No comment found to delete"
+}
+```
+
+**Database Error (502):**
+
+```json
+{
+  "success": false,
+  "error": "Failed to delete comment"
+}
+```
+
+---
+
+## Request/Response Format
+
+### Common Response Structure
+
+All API responses follow this consistent format:
+
+```json
+{
+  "success": boolean,
+  "data": object | array | string | null,
+  "error": string
+}
+```
+
+### ID Format
+
+All IDs in the API are MongoDB ObjectIDs represented as 24-character hexadecimal strings.
+
+**Example:** `507f1f77bcf86cd799439011`
+
+### Date Format
+
+All timestamps are in ISO 8601 format with UTC timezone.
+
+**Example:** `2024-01-17T11:30:00Z`
+
+### Content-Type
+
+All requests should include the `Content-Type: application/json` header when sending JSON data.
+
+---
+
+## Error Handling
+
+The API uses standard HTTP status codes:
+
+- **200**: Success
+- **400**: Bad Request (invalid data, missing fields, invalid ID format)
+- **404**: Not Found (post or comment doesn't exist)
+- **500**: Internal Server Error (database query errors)
+- **502**: Bad Gateway (database connection or transaction errors)
+
+All error responses include a descriptive error message in the `error` field and set `success` to `false`.
+
+---
+
+## Database Operations
+
+- **Timeouts**: All database operations have a 10-second timeout to prevent hanging requests
+- **Transactions**: Post deletion uses MongoDB transactions to ensure atomicity
+- **Validation**: All ObjectIDs are validated before database operations
+- **Error Logging**: Database errors are logged with structured logging using Zap
