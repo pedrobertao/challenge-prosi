@@ -1,6 +1,6 @@
 module github.com/pedrobertao/challenge-prosi
 
-go 1.24.4
+go 1.23
 
 require (
 	github.com/gofiber/fiber/v2 v2.52.8
